@@ -38,3 +38,18 @@ to_iso8601 <- function(datetime, offset) {
   }
 }
 
+
+# function to transform the volumes from the traffic volume data to a dataframe
+transform_volumes <- function(data) {
+  return(
+    data$trafficData$volume$byHour$edges %>% 
+      # using a custom function to map the list within lists
+      map_df(~ tibble(from = .x$node$from,
+                      to = .x$node$to,
+                      total = .x$node$total)) %>% 
+      unnest_wider(total) %>% 
+      mutate(from = as_datetime(from),
+             to = as_datetime(to))
+  )
+}
+
