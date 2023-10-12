@@ -17,5 +17,24 @@ transform_metadata_to_df <- function(metadata) {
 }
 
 
-
+# function to convert datetime from latestData column to iso8601 format
+to_iso8601 <- function(datetime, offset) {
+  # first check, if datetime value is actually in utc
+  if (attr(datetime, "tzone") != "UTC") {
+    stop("Datetime must be in UTC timezone.")
+  # check if it is an integer value
+  } else if (!is.integer(offset)) {
+      if (round(offset) == offset) {
+        # return the date in iso8601 format as a string
+        return(
+          iso8601(datetime + days(offset)) %>% 
+            as.character() %>% 
+            paste0(.,"Z")
+        )
+      }
+      else {
+        stop("Offset must be an integer.")
+      }
+  }
+}
 
