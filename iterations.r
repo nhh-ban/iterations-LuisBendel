@@ -9,6 +9,7 @@ library(lubridate)
 library(anytime)
 library(readr)
 library(yaml)
+library(glue)
 
 #### 1: Beginning of script
 
@@ -52,7 +53,7 @@ source("gql-queries/vol_qry.r")
 
 stations_metadata_df %>% 
   filter(latestData > Sys.Date() - days(7)) %>% 
-  sample_n(1) %$% 
+  sample_n(1) %$%
   vol_qry(
     id = id,
     from = to_iso8601(latestData, -4),
@@ -61,9 +62,30 @@ stations_metadata_df %>%
   GQL(., .url = configs$vegvesen_url) %>%
   transform_volumes() %>% 
   ggplot(aes(x=from, y=volume)) + 
-  geom_line() + 
+  geom_line() +
   theme_classic()
 
+
+# make the plot prettier
+# I did not find a way to do this in one pipe
+# so storing station to plot in a separate 1-row dataframe instead
+station_to_plot <- stations_metadata_df %>% 
+  filter(latestData > Sys.Date() - days(7)) %>% 
+  sample_n(1)
+
+# using the 1-row dataframe to plot, then we can later reference the name
+station_to_plot %$%
+  vol_qry(
+    id = id,
+    from = to_iso8601(latestData, -4),
+    to = to_iso8601(latestData, 0)
+  ) %>% 
+  GQL(., .url = configs$vegvesen_url) %>%
+  transform_volumes() %>% 
+  ggplot(aes(x=from, y=volume)) + 
+  geom_line() +
+  labs(title = paste("Station:", station_to_plot$name)) +
+  theme_classic()
 
 
 
